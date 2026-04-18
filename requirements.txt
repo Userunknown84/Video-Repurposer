@@ -1,0 +1,7 @@
+streamlit
+moviepy==1.0.3
+openai-whisper
+yt-dlp
+requests
+opencv-python-headless
+torch
