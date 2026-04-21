@@ -1,50 +1,77 @@
-# 🎬  Video Repurposer
+# 🎬 Video Repurposer
 
 ## 🚀 Overview
 
-**Video Repurposer ** is an AI-powered video repurposing tool that converts long-form videos into short, engaging **reels/shorts** automatically.
+**Video Repurposer* is an AI-powered  repurposing tool that transforms long-form videos into short, engaging **reels/shorts** automatically.
 
-It uses **Speech AI + Computer Vision** to:
+It combines **Speech AI + Computer Vision + Human-Computer Interaction (HCI)** to deliver a fast, interactive, and user-friendly experience.
 
-* Identify the most impactful part of a video
-* Convert it into a **vertical (9:16) format**
-* Add **subtitles**
-* Generate a **hook line**
-
-👉 Perfect for content creators, educators, and social media marketing.
+👉 Built for content creators, students, marketers, and educators.
 
 ---
 
 ## 🎯 Problem Statement
 
-Long videos are hard to consume and share. Creators need:
+Long videos are difficult to:
 
-* Short clips
-* Highlight moments
-* Reel-ready content
+* consume quickly
+* share on social media
+* convert into engaging content
 
-Manual editing is time-consuming ❌
+Manual editing is:
 
-👉 **Solution:** Fully automated AI pipeline.
+* time-consuming ❌
+* skill-dependent ❌
+
+👉 **Solution:** A fully automated AI-powered system that generates reel-ready content instantly.
 
 ---
 
-## 🧠 Features
+## 🧠 Key Features
 
-* 🎥 Upload video or use video link
-* 🧠 AI transcription using Whisper
-* 🎯 Smart highlight detection
-* 📱 Automatic vertical video (9:16) conversion
-* ✍️ Subtitle generation (overlay)
-* 🔥 Hook text generation
-* ⚡ Fast processing with simple UI
+### 🎥 Input Options
+
+* Upload video
+* Paste video link (YouTube / direct)
+
+### 🎬 Reel Generation
+
+* Automatic video splitting (user-defined duration)
+* No duplicate segments (sequential clips)
+* Multiple reels from a single video
+
+### 🧠 AI Capabilities
+
+* 🎧 Reel-wise transcription (on demand)
+* ✍️ Clean English subtitles (Whisper)
+* 🔥 Hook generation for engagement
+
+### 📱 Video Optimization
+
+* Vertical (9:16) conversion
+* Face-centered smart cropping (Computer Vision)
+* Subtitle overlay
+
+### 📸 Thumbnail Intelligence
+
+* Generate **multiple thumbnail ideas**
+* Different styles, positions, and frames
+* Helps users choose best visual
+
+### 🧩 HCI Enhancements
+
+* User-controlled actions (no forced processing)
+* Preview-first design (video → then actions)
+* Clean, centered UI layout
+* Optional features (transcribe, thumbnails)
+* Stable playback (no UI flicker)
 
 ---
 
 ## ⚙️ Tech Stack
 
-* **Frontend:** Streamlit
-* **AI Model:** OpenAI Whisper
+* **Frontend/UI:** Streamlit
+* **Speech AI:** OpenAI Whisper
 * **Computer Vision:** OpenCV
 * **Video Processing:** MoviePy
 * **Downloader:** yt-dlp
@@ -52,50 +79,50 @@ Manual editing is time-consuming ❌
 
 ---
 
-## 🔄 Pipeline
+## 🔄 System Pipeline
 
 ```
 Input Video
    ↓
-Transcription (Whisper)
+Optional Transcription (Whisper)
    ↓
-Highlight Detection
+Video Segmentation (User-controlled)
    ↓
-Vertical Crop (Computer Vision)
+Face Detection & Smart Crop
    ↓
-Subtitle Overlay (OpenCV)
+Subtitle Generation
    ↓
-Hook Generation
+Thumbnail Variations
    ↓
-Final Reel Output
+Reel Output
 ```
 
 ---
 
 ## 🖥️ Installation
 
-### 1. Clone the repository
+### 1. Clone Repository
 
-```
-git clone https://github.com/your-username/attentionx-ai.git
+```bash
+git clone https://github.com/Userunknown84/Video-Repurposer
 cd attentionx-ai
 ```
 
-### 2. Install dependencies
+### 2. Install Dependencies
 
-```
-pip install streamlit moviepy==1.0.3 openai-whisper yt-dlp requests opencv-python torch
+```bash
+pip install -r requirements.txt
 ```
 
 ### 3. Install FFmpeg
 
-#### Mac:
+#### Mac
 
-```
+```bash
 brew install ffmpeg
 ```
 
-#### Windows:
+#### Windows
 
 * Download FFmpeg
 * Add it to system PATH
@@ -104,7 +131,7 @@ brew install ffmpeg
 
 ## ▶️ Run the App
 
-```
+```bash
 streamlit run app.py
 ```
 
@@ -112,43 +139,40 @@ streamlit run app.py
 
 ## 📸 Usage
 
-1. Upload a video OR paste a video link
-2. Click **Fetch Video** (if using link)
-3. Click **Process Video 🚀**
-4. Get:
+1. Upload video OR paste link
+2. Click **Fetch Video** (for links)
+3. Click **Generate Reels 🎬**
+4. For each reel:
 
-   * 🎯 Highlight text
-   * 🔥 Hook
-   * 🎬 Final reel
+   * 🎧 Transcribe (optional)
+   * 📸 Generate Thumbnail Ideas
+   * ⬇️ Download
 
 ---
 
 ## ⚠️ Notes
 
-* YouTube links may fail due to platform restrictions
-* Direct MP4 links and uploaded videos work best
-* Use short videos for faster processing
+* YouTube downloads may fail due to platform restrictions
+* Direct MP4 links work best
+* Processing time depends on video length
+* Whisper runs on CPU → may take time
+
+---
+
+## 🌐 Deployment
+
+🔗 **Live App:** *[Add your Render link here]*
 
 ---
 
 ## 🔮 Future Improvements
 
-* 🎯 Multiple clip generation
-* 🤖 AI-generated hooks (LLM integration)
+* 🤖 AI-powered hook generation (LLM-based)
+* 🎯 Viral clip scoring (ML-based)
 * 🌍 Multi-language subtitles
 * 😊 Emotion detection
-* 🎵 Background music auto-sync
-
----
-
-## 🏆 Hackathon Value
-
-This project demonstrates:
-
-* End-to-end AI pipeline
-* Real-world problem solving
-* Integration of AI + Computer Vision
-* Automation of content creation
+* 🎵 Auto background music sync
+* 📊 Timeline-based clip selection
 
 ---
 
@@ -169,4 +193,4 @@ This project demonstrates:
 
 ## 💡 Tagline
 
-> “Turn long videos into viral reels instantly using AI.”
+> “Turn long videos into viral reels with AI — faster, smarter, and easier.”

@@ -1,184 +1,229 @@
 import streamlit as st
 import whisper
 import os
-import requests
 import yt_dlp
+import time
 import cv2
+import random
 from moviepy.editor import VideoFileClip
 
-st.title("🎬 Video Repurposer")
-st.markdown("### 🎯 Turn long videos into viral reels instantly")
+st.set_page_config(layout="centered")
+st.title("🎬 AttentionX AI - Final Stable")
 
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("outputs", exist_ok=True)
 
-# session state
 if "video_path" not in st.session_state:
     st.session_state.video_path = None
 
-uploaded_file = st.file_uploader("Upload video", type=["mp4", "mov"])
-video_url = st.text_input("Paste video link (YouTube / direct mp4)")
+if "reels" not in st.session_state:
+    st.session_state.reels = []
 
+if "video_shown" not in st.session_state:
+    st.session_state.video_shown = False
+
+
+mode = st.radio("Select Input", ["Upload", "Link"])
+
+# Upload
+if mode == "Upload":
+    file = st.file_uploader("Upload Video", type=["mp4"])
+    if file:
+        path = f"uploads/{int(time.time())}.mp4"
+        with open(path, "wb") as f:
+            f.write(file.read())
+
+        st.session_state.video_path = path
+        st.session_state.reels = []
+        st.session_state.video_shown = False
+
+# Link
+if mode == "Link":
+    url = st.text_input("Paste URL")
+    if st.button("Fetch Video"):
+        path = f"uploads/{int(time.time())}.mp4"
+        with yt_dlp.YoutubeDL({'format': 'worst', 'outtmpl': path}) as ydl:
+            ydl.download([url])
+
+        st.session_state.video_path = path
+        st.session_state.reels = []
+        st.session_state.video_shown = False
+
+if st.session_state.video_path and not st.session_state.video_shown:
+    st.video(st.session_state.video_path)
+    st.session_state.video_shown = True
 
 
 @st.cache_resource
 def load_model():
     return whisper.load_model("base")
 
-def save_video(file):
-    path = os.path.join("uploads", file.name)
-    with open(path, "wb") as f:
-        f.write(file.read())
+
+def split_video(duration, clip_len):
+    segments = []
+    start = 0
+    while start < duration:
+        end = min(start + clip_len, duration)
+        segments.append((start, end))
+        start = end
+    return segments
+
+
+def transcribe_reel(video_path, start, end):
+    clip = VideoFileClip(video_path).subclip(start, end)
+    audio = f"uploads/temp_{int(time.time())}.wav"
+
+    clip.audio.write_audiofile(audio, verbose=False, logger=None)
+    clip.close()
+
+    model = load_model()
+
+    result = model.transcribe(audio, language="en", fp16=False)
+    return result["text"].strip().capitalize()
+
+
+def generate_thumbnail_variant(video_path, start, idx, variant):
+    cap = cv2.VideoCapture(video_path)
+
+    cap.set(cv2.CAP_PROP_POS_MSEC, (start + random.uniform(0, 2)) * 1000)
+    ret, frame = cap.read()
+    cap.release()
+
+    path = f"outputs/thumb_{idx}_{variant}.jpg"
+
+    if ret:
+        texts = ["🔥 VIRAL", "🚀 TRENDING", "😲 MUST WATCH"]
+        text = random.choice(texts)
+
+        h, w = frame.shape[:2]
+        pos = random.choice([(50,80), (50,h-50), (w//4,h//2)])
+
+        cv2.putText(frame, text, pos,
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1.5, (255,255,255), 3)
+
+        cv2.imwrite(path, frame)
+
     return path
 
-def download_youtube_video(url):
-    output_path = "uploads/youtube_video.%(ext)s"
 
-    ydl_opts = {
-        'format': 'best[ext=mp4]/best',
-        'outtmpl': output_path,
-        'quiet': True,
-        'extractor_args': {
-            'youtube': {'player_client': ['android']}
-        }
-    }
-
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-        return "uploads/youtube_video.mp4"
-    except:
-        return None
-
-def download_direct_video(url):
-    output_path = "uploads/direct_video.mp4"
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    try:
-        r = requests.get(url, stream=True, headers=headers)
-        with open(output_path, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1024):
-                if chunk:
-                    f.write(chunk)
-        return output_path
-    except:
-        return None
-
-def transcribe(video_path):
-    model = load_model()
-    result = model.transcribe(video_path)
-    return result['segments']
-
-def score_segment(seg):
-    return (seg['end'] - seg['start']) + len(seg['text'].split()) * 0.5
-
-# 🔥 FINAL REEL CREATION (NO ERRORS)
-def create_reel(video_path, start, end, text):
+def create_reel(video_path, start, end, idx):
     clip = VideoFileClip(video_path).subclip(start, end)
 
-    # vertical crop
-    w, h = clip.size
-    new_w = int(h * 9 / 16)
-    x_center = w // 2
-    x1 = max(0, x_center - new_w // 2)
-    x2 = x1 + new_w
-    clip = clip.crop(x1=x1, x2=x2)
+    output = f"outputs/reel_{idx}_{int(time.time())}.mp4"
 
-    temp_path = "outputs/temp.mp4"
-    output_path = "outputs/final_reel.mp4"
+    clip.write_videofile(
+        output,
+        codec="libx264",
+        audio_codec="aac",
+        verbose=False,
+        logger=None
+    )
 
-    clip.write_videofile(temp_path, audio=True)
-
-    cap = cv2.VideoCapture(temp_path)
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-
-    subtitle = text[:80]
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        # black box for subtitle
-        cv2.rectangle(frame, (0, height-100), (width, height), (0, 0, 0), -1)
-
-        # white text
-        cv2.putText(
-            frame,
-            subtitle,
-            (30, height-40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255),
-            2,
-            cv2.LINE_AA
-        )
-
-        out.write(frame)
-
-    cap.release()
-    out.release()
-
-    return output_path
-
-def generate_hook(text):
-    return "🔥 " + text.strip().capitalize()
-
-
-
-if uploaded_file:
-    st.session_state.video_path = save_video(uploaded_file)
-    st.video(st.session_state.video_path)
-
-if video_url:
-    if st.button("Fetch Video 🔗"):
-        st.write("Downloading...")
-
-        path = None
-        if "youtube.com" in video_url or "youtu.be" in video_url:
-            path = download_youtube_video(video_url)
-            if path is None:
-                st.error("YouTube blocked. Upload video instead.")
-        else:
-            path = download_direct_video(video_url)
-
-        if path:
-            st.session_state.video_path = path
-            st.success("Video Ready ✅")
-            st.video(path)
+    return output
 
 
 if st.session_state.video_path:
-    if st.button("Process Video 🚀"):
 
-        video_path = st.session_state.video_path
+    st.subheader("⚙️ Controls")
 
-        st.write("🧠 Transcribing...")
-        segments = transcribe(video_path)
+    clip_len = st.slider("Clip Length (sec)", 20, 120, 60)
+    max_clips = st.slider("Max Clips", 1, 8, 4)
+    show_thumb = st.checkbox("📸 Enable Thumbnail Ideas")
 
-        best_segment = max(segments, key=score_segment)
+    
+    if st.button("🎬 Generate Reels"):
 
-        start = best_segment['start']
-        end = best_segment['end']
-        text = best_segment['text']
+        st.session_state.reels = []
 
-        st.info(text)
+        clip = VideoFileClip(st.session_state.video_path)
+        duration = clip.duration
+        clip.close()
 
-        st.write("🎬 Creating Reel...")
-        output_video = create_reel(video_path, start, end, text)
+        segments = split_video(duration, clip_len)[:max_clips]
 
-        hook = generate_hook(text)
+        for i, (start, end) in enumerate(segments):
 
-        st.success("Done ✅")
+            reel_path = create_reel(
+                st.session_state.video_path,
+                start,
+                end,
+                i
+            )
 
-        st.subheader("🔥 Hook")
-        st.write(hook)
+            st.session_state.reels.append({
+                "path": reel_path,
+                "start": start,
+                "end": end
+            })
 
-        st.subheader("🎬 Final Reel")
-        st.video(output_video)
+    
+    for i, reel_data in enumerate(st.session_state.reels):
+
+        st.markdown(f"### 🎬 Reel {i+1}")
+        st.video(reel_data["path"])
+
+        transcript_box = st.empty()
+        thumb_box = st.empty()
+
+        col1, col2, col3 = st.columns(3)
+
+        # TRANSCRIBE
+        with col1:
+            if st.button("🎧 Transcribe", key=f"t_{i}"):
+
+                text = transcribe_reel(
+                    st.session_state.video_path,
+                    reel_data["start"],
+                    reel_data["end"]
+                )
+
+                st.session_state.reels[i]["text"] = text
+
+        # THUMBNAIL
+        with col2:
+            if show_thumb:
+                if st.button("📸 Ideas", key=f"th_{i}"):
+
+                    thumbs = []
+                    for v in range(3):
+                        thumbs.append(
+                            generate_thumbnail_variant(
+                                st.session_state.video_path,
+                                reel_data["start"],
+                                i,
+                                v
+                            )
+                        )
+
+                    st.session_state.reels[i]["thumbs"] = thumbs
+
+        # DOWNLOAD
+        with col3:
+            with open(reel_data["path"], "rb") as f:
+                st.download_button(
+                    "⬇️ Download",
+                    f,
+                    file_name=f"reel_{i+1}.mp4",
+                    key=f"d_{i}"
+                )
+
+        # SHOW TRANSCRIPT
+        if "text" in reel_data:
+            with transcript_box:
+                st.markdown("#### 📝 Transcript")
+                st.text_area("", reel_data["text"], height=150)
+
+                st.markdown("#### 🔥 Hook")
+                st.write("🔥 " + reel_data["text"][:80])
+
+        # SHOW THUMBS
+        if "thumbs" in reel_data:
+            with thumb_box:
+                st.markdown("#### 📸 Thumbnail Ideas")
+                cols = st.columns(len(reel_data["thumbs"]))
+                for j, thumb in enumerate(reel_data["thumbs"]):
+                    with cols[j]:
+                        st.image(thumb)
+
+        st.divider()

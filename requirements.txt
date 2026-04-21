@@ -1,7 +1,9 @@
 streamlit
 moviepy==1.0.3
-openai-whisper
-yt-dlp
-requests
-opencv-python-headless
-torch
+openai-whisper==20231117
+yt-dlp==2024.4.9
+requests==2.31.0
+opencv-python-headless==4.9.0.80
+numpy==1.26.4
+torch==2.2.2
+imageio-ffmpeg==0.4.9
