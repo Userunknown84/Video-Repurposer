@@ -161,7 +161,7 @@ streamlit run app.py
 
 ## 🌐 Deployment
 
-🔗 **Live App:** *[Add your Render link here]*
+🔗 **Live App:** *[https://video-repurposer.onrender.com/]*
 
 ---
 
