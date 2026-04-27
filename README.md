@@ -10,11 +10,6 @@ It combines **Speech AI + Computer Vision + Human-Computer Interaction (HCI)** t
 
 ---
 
-## 🌐 Deployment
-
-🔗 **Live App:** https://video-repurposer.onrender.com
-
----
 
 ## 🎯 Problem Statement
 
